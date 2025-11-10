@@ -54,7 +54,9 @@ jobs:
           IMAGE_TAG=monolith-app:${{ github.sha }}
           docker buildx build --platform linux/amd64 -t $IMAGE_TAG ../.
           docker tag $IMAGE_TAG ${{ secrets.ECR_REGISTRY }}/${IMAGE_TAG}
+          docker tag $IMAGE_TAG ${{ secrets.ECR_REGISTRY }}/monolith-app:latest
           docker push ${{ secrets.ECR_REGISTRY }}/${IMAGE_TAG}
+          docker push ${{ secrets.ECR_REGISTRY }}/monolith-app:latest
 
 
       - name: Update ECS Service
