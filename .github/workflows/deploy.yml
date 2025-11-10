@@ -15,7 +15,7 @@ jobs:
 
     defaults:
         run:
-            working-directory: terraform
+            working-directory: ./terraform
         
 
     steps:
@@ -51,7 +51,7 @@ jobs:
       - name: Build and Push Docker Image to ECR
         run: |
           IMAGE_TAG=monolith-app:${{ github.sha }}
-          docker buildx build --platform linux/amd64 -t $IMAGE_TAG .
+          docker buildx build --platform linux/amd64 -t $IMAGE_TAG ../.
           docker tag $IMAGE_TAG ${{ secrets.ECR_REGISTRY }}/${IMAGE_TAG}
           docker push ${{ secrets.ECR_REGISTRY }}/${IMAGE_TAG}
 
