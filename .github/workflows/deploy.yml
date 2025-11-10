@@ -63,3 +63,7 @@ jobs:
         run: |
           IMAGE_TAG=monolith-app:${{ github.sha }}
           aws ecs update-service --cluster monolith-cluster --service monolith-service --force-new-deployment
+
+
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
