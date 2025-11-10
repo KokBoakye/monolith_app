@@ -1,0 +1,61 @@
+name: Deploy Monolith Application
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+        run:
+            working-directory: terraform
+        
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Set up terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: '1.5.0'
+
+    
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and Push Docker Image to ECR
+        run: |
+          IMAGE_TAG=monolith-app:${{ github.sha }}
+          docker buildx build --platform linux/amd64 -t $IMAGE_TAG .
+          docker tag $IMAGE_TAG ${{ secrets.ECR_REGISTRY }}/${IMAGE_TAG}
+          docker push ${{ secrets.ECR_REGISTRY }}/${IMAGE_TAG}
+
+      - name: Update ECS Service
+        run: |
+          IMAGE_TAG=monolith-app:${{ github.sha }}
+          aws ecs update-service --cluster monolith-cluster --service monolith-service --force-new-deployment
